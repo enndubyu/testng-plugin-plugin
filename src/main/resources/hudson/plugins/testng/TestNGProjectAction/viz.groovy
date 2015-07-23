@@ -25,6 +25,6 @@ l.layout(title: "Test Execution Timeline") {
 }
 
 script() {
-    text("\nvar unsortedData = ${my.getUnsortedJson()};")
+    text("\nvar unsortedData = ${my.getUnsortedVizJson()};")
     text("\ntestViz('viz', unsortedData);")
 }

@@ -168,75 +168,7 @@ public class TestNGProjectAction extends TestResultProjectAction implements Prom
       return jsonObject.toString();
    }
 
-   /**
-    * Returns json for testing Visualizer
-    *
-    * @return a json for a testing visualizer
-    */
-   public String getVizJson() {
-      JSONArray jsonObject = new JSONArray();
-      List<JSONObject> threads = new ArrayList<JSONObject>();
-      threads.add(makeThreadObject(1));
-
-      List<Long> threadEndTimes = new ArrayList<Long>();
-      threadEndTimes.add(Integer.toUnsignedLong(0));
-
-      AbstractBuild<?, ?> build = getProject().getLastBuild();
-      if (build.getResult() == null || build.getResult().isWorseThan(Result.FAILURE)) {
-         //We don't want to add aborted or builds with no results into the graph
-         return jsonObject.toString();
-      }
-
-      TestNGTestResultBuildAction action = build.getAction(getBuildActionClass());
-      //Err, I think this is the only way?
-      for (TestNGTestResult result : action.getResult().getTestList()) {
-         for(ClassResult classResult : result.getClassList()) {
-            for(MethodResult methodResult : classResult.getTestMethods()) {
-               boolean newThread = true;
-
-               int threadIndex = 0;
-               for(Long endTime : threadEndTimes) {
-                  if(methodResult.getStartTime() >= endTime) {
-                     newThread = false;
-                     threads.get(threadIndex).getJSONArray("times").add(makeTimeObject(methodResult));
-                     threadEndTimes.set(threadIndex, methodResult.getEndTime());
-                     break;
-                  }
-                  threadIndex++;
-               }
-               if(newThread){
-                  threads.add(makeThreadObject(threads.size() + 1));
-                  threadEndTimes.add(methodResult.getEndTime());
-               }
-            }
-         }
-      }
-
-      for(JSONObject thread : threads) {
-         jsonObject.add(thread);
-      }
-
-      return jsonObject.toString();
-   }
-
-   private JSONObject makeTimeObject(MethodResult methodResult) {
-      JSONObject times = new JSONObject();
-      times.put("starting_time", methodResult.getStartTime());
-      times.put("ending_time", methodResult.getEndTime());
-      times.put("status", methodResult.getStatus());
-      times.put("name", methodResult.getName());
-      return times;
-   }
-
-   private JSONObject makeThreadObject(int threadNum) {
-      JSONObject thread = new JSONObject();
-      JSONArray times = new JSONArray();
-      thread.put("label", "Thread "+Integer.toString(threadNum));
-      thread.put("times", times);
-      return thread;
-   }
-
-   public String getUnsortedJson() {
+   public String getUnsortedVizJson() {
       JSONArray jsonObject = new JSONArray();
 
       AbstractBuild<?, ?> build = getProject().getLastBuild();
@@ -250,6 +182,9 @@ public class TestNGProjectAction extends TestResultProjectAction implements Prom
       for (TestNGTestResult result : action.getResult().getTestList()) {
          for(ClassResult classResult : result.getClassList()) {
             for(MethodResult methodResult : classResult.getTestMethods()) {
+               if(methodResult.isConfig()) {
+                  continue;
+               }
                JSONObject method = new JSONObject();
                method.put("starting_time", methodResult.getStartTime());
                method.put("ending_time", methodResult.getEndTime());

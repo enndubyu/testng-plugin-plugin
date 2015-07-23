@@ -1,5 +1,5 @@
 function testViz(id, data) {
-    var sortedData = unsortedData.sort(function(a,b){
+    var sortedData = data.sort(function(a,b){
         if(a.ending_time > b.ending_time){
             return 1;
         } else if(a.ending_time < b.ending_time) {
@@ -15,7 +15,7 @@ function testViz(id, data) {
     sortedData.forEach(function(test){
         var newThread = true;
         var threadIndex = 0;
-        /*
+
         for(var i = 0; i < threadEndTimes.length; i++){
             var threadTime = threadEndTimes[i];
             if(test.starting_time >= threadTime) {
@@ -25,16 +25,14 @@ function testViz(id, data) {
                 break;
             }
             threadIndex++;
-            if(newThread){
-                finalData.push({label: "Thread"+finalData.length+1, times:[test]});
-                threadEndTimes.push(test.ending_time);
-            }
-        }*/
+        }
+        if(newThread){
+            finalData.push({label: "Thread"+(finalData.length+1), times:[test]});
+            threadEndTimes.push(test.ending_time);
+        }
     });
 
-console.log(finalData);
-
-
+    data = finalData;
       var width = data[0].times.length * 50;
       var testData = [
         {label: "person a", times: [{"starting_time": 1355752800000, "ending_time": 1355759900000}, {"starting_time": 1355767900000, "ending_time": 1355774400000}]},
