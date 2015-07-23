@@ -4,7 +4,13 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.ProminentProjectAction;
 import hudson.model.Result;
+import hudson.plugins.testng.results.ClassResult;
+import hudson.plugins.testng.results.MethodResult;
+import hudson.plugins.testng.results.TestNGTestResult;
 import hudson.tasks.test.TestResultProjectAction;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import net.sf.json.JSONArray;
@@ -159,6 +165,40 @@ public class TestNGProjectAction extends TestResultProjectAction implements Prom
       jsonObject.put("skip", skips);
       jsonObject.put("buildNum", buildNum);
       jsonObject.put("duration", durations);
+      return jsonObject.toString();
+   }
+
+   /**
+    * Returns json for testing Visualizer
+    *
+    * @return a json for a testing visualizer
+    */
+   public String getVizJson() {
+      JSONArray jsonObject = new JSONArray();
+      List<JSONObject> threads = new ArrayList<JSONObject>();
+      JSONObject thread1 = new JSONObject();
+      thread1.put("label", "Thread 1");
+      threads.add(thread1);
+
+      int threadCount = 1;
+      List<Long> threadEndTime = new ArrayList<Long>();
+      threadEndTime.add(Integer.toUnsignedLong(0));
+
+      AbstractBuild<?, ?> build = getProject().getLastBuild();
+      if (build.getResult() == null || build.getResult().isWorseThan(Result.FAILURE)) {
+         //We don't want to add aborted or builds with no results into the graph
+         return jsonObject.toString();
+      }
+      TestNGTestResultBuildAction action = build.getAction(getBuildActionClass());
+      //Err, I think this is the only way?
+      for (TestNGTestResult result : action.getResult().getTestList()) {
+         for(ClassResult classResult : result.getClassList()) {
+            for(MethodResult methodResult : classResult.getTestMethods()) {
+               methodResult.getEndTime();
+            }
+         }
+      }
+
       return jsonObject.toString();
    }
 }
