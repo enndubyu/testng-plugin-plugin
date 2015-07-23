@@ -39,6 +39,9 @@ l.layout(title: "TestNG Results Trend") {
             }
             text(")")
         }
+        a(href: "viz") {
+            text("Execution Timeline")
+        }
 
         def lastCompletedBuildAction = my.lastCompletedBuildAction
         if (lastCompletedBuildAction) {
@@ -48,7 +51,6 @@ l.layout(title: "TestNG Results Trend") {
         } else {
             p("No builds have successfully recorded TestNG results yet")
         }
-        div(id: "viz")
     }
 }
 
@@ -57,5 +59,4 @@ script() {
     text("\nvar vizData = ${my.getVizJson()};")
     text("\nvar unsortedData = ${my.getUnsortedJson()};")
     text("\nresultsGraph('chart', data);")
-    text("\ntestViz('viz', vizData);")
 }
