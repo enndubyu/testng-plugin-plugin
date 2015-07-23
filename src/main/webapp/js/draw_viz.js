@@ -9,7 +9,7 @@ function testViz(id, data) {
         }
     });
 
-    var finalData = [{label: "Thread1", times:[]}];
+    var finalData = [{label: "Tests", times:[]}];
     var threadEndTimes = [0];
 
     sortedData.forEach(function(test){
@@ -27,11 +27,11 @@ function testViz(id, data) {
             threadIndex++;
         }
         if(newThread){
-            finalData.push({label: "Thread"+(finalData.length+1), times:[test]});
+            finalData.push({label: "", times:[test]});
             threadEndTimes.push(test.ending_time);
         }
     });
-    console.log(finalData);
+
     data = finalData;
       var width = data[0].times.length * 50;
 
@@ -43,18 +43,22 @@ function testViz(id, data) {
           // d is the current rendering object
           // i is the index during d3 rendering
           // datum is the id object
-            var div = $('#hoverRes');
+            console.log("hello");
+            var div = document.getElementById('hoverRes');
             var colors = chart.colors();
-            div.find('.coloredDiv').css('background-color', colors(i))
-            div.find('#name').text(datum.label);
+            //div.find('.coloredDiv').css('background-color', colors(i))
+            document.getElementById('name').textContent = d.name;
           })
           .click(function (d, i, datum) {
-            alert(d.name);
+            var div = document.getElementById('hoverRes');
+            var colors = chart.colors();
+            //div.find('.coloredDiv').css('background-color', colors(i))
+            document.getElementById('name').textContent = d.name;
           })
           .scroll(function (x, scale) {
             $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
           });
-        var svg = d3.select("#"+id).append("svg").attr("width", width)
+        var svg = d3.select("#"+id).append("svg").attr("width", 800)
           .datum(data).call(chart);
 
 }

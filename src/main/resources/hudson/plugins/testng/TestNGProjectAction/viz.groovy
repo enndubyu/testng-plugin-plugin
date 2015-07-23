@@ -21,6 +21,11 @@ l.layout(title: "Test Execution Timeline") {
     l.main_panel() {
         h1("Test Execution Timeline")
         div(id: "viz")
+        div(id: "hoverRes") {
+            div(id: "coloredDiv")
+            div(id: "name")
+            div(id: "scrolled_date")
+        }
     }
 }
 
