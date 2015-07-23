@@ -31,14 +31,9 @@ function testViz(id, data) {
             threadEndTimes.push(test.ending_time);
         }
     });
-
+    console.log(finalData);
     data = finalData;
       var width = data[0].times.length * 50;
-      var testData = [
-        {label: "person a", times: [{"starting_time": 1355752800000, "ending_time": 1355759900000}, {"starting_time": 1355767900000, "ending_time": 1355774400000}]},
-        {label: "person b", times: [{"starting_time": 1355759910000, "ending_time": 1355761900000}, ]},
-        {label: "person c", times: [{"starting_time": 1355761910000, "ending_time": 1355763910000}]},
-      ];
 
         var chart = d3.timeline()
           .width(width)
@@ -54,7 +49,7 @@ function testViz(id, data) {
             div.find('#name').text(datum.label);
           })
           .click(function (d, i, datum) {
-            alert(datum.label);
+            alert(d.name);
           })
           .scroll(function (x, scale) {
             $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
