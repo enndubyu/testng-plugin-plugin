@@ -48,13 +48,14 @@ l.layout(title: "TestNG Results Trend") {
         } else {
             p("No builds have successfully recorded TestNG results yet")
         }
-        div(id: "viz")
+
+        a(href: "viz") {
+            text("Execution Timeline")
+        }
     }
 }
 
 script() {
     text("\nvar data = ${my.getChartJson()};")
-    text("\nvar vizData = ${my.getVizJson()};")
     text("\nresultsGraph('chart', data);")
-    text("\ntestViz('viz', vizData);")
 }
