@@ -1,4 +1,5 @@
 function testViz(id, data) {
+      console.log(data);
       var width = 500;
       var testData = [
         {label: "person a", times: [{"starting_time": 1355752800000, "ending_time": 1355759900000}, {"starting_time": 1355767900000, "ending_time": 1355774400000}]},
@@ -27,7 +28,7 @@ function testViz(id, data) {
             $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
           });*/
         var svg = d3.select("#"+id).append("svg").attr("width", width)
-          .datum(testData).call(chart);
+          .datum(data).call(chart);
 
 }
 
