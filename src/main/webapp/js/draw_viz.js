@@ -57,9 +57,14 @@ function testViz(id, data) {
           })
           .scroll(function (x, scale) {
             $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
+          })
+          .tickFormat({
+               format: d3.time.format("%Hh%Mm%Ss"),
+               tickTime: d3.time.seconds,
+               tickInterval: 5,
+               tickSize: 6
           });
         var svg = d3.select("#"+id).append("svg").attr("width", 800)
           .datum(data).call(chart);
 
 }
-
