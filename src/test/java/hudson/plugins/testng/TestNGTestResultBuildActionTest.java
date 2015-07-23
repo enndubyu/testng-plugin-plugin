@@ -69,7 +69,7 @@ public class TestNGTestResultBuildActionTest extends HudsonTestCase {
         //ensure only one failed test
         //there are three links in the cell, we pick the one without any id attr
         elements = page.selectNodes("//table[@id='fail-tbl']/tbody/tr/td/a[not(@id)]");
-        assertEquals(1, elements.size());
+        assertEquals(2, elements.size()); //two links with the addition of Failure Age
         MethodResult mr = testngResult.getFailedTests().get(0);
         assertEquals(super.getURL() + mr.getOwner().getUrl() + mr.getId(),
                 elements.get(0).getAttribute("href"));
