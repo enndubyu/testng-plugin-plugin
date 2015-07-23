@@ -13,11 +13,16 @@ import java.util.logging.Logger;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
 import hudson.model.Api;
+import hudson.model.Result;
 import hudson.plugins.testng.parser.ResultsParser;
+import hudson.plugins.testng.results.ClassResult;
 import hudson.plugins.testng.results.MethodResult;
 import hudson.plugins.testng.results.TestNGResult;
+import hudson.plugins.testng.results.TestNGTestResult;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
