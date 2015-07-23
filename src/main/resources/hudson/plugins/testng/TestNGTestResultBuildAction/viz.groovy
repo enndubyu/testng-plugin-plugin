@@ -15,9 +15,8 @@ script(src:"${app.rootUrl}/plugin/testng-plugin/js/d3.min.js")
 script(src:"${app.rootUrl}/plugin/testng-plugin/js/d3-timeline.min.js")
 script(src:"${app.rootUrl}/plugin/testng-plugin/js/draw_viz.js")
 
-
 l.layout(title: "Test Execution Timeline") {
-    st.include(page: "sidepanel.jelly", it: my.project)
+    st.include(page: "sidepanel.jelly", it: my.owner)
     l.main_panel() {
         h1("Test Execution Timeline")
         div(id: "viz")
