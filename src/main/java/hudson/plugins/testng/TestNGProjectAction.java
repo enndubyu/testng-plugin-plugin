@@ -235,4 +235,30 @@ public class TestNGProjectAction extends TestResultProjectAction implements Prom
       thread.put("times", times);
       return thread;
    }
+
+   public String getUnsortedJson() {
+      JSONArray jsonObject = new JSONArray();
+
+      AbstractBuild<?, ?> build = getProject().getLastBuild();
+      if (build.getResult() == null || build.getResult().isWorseThan(Result.FAILURE)) {
+         //We don't want to add aborted or builds with no results into the graph
+         return jsonObject.toString();
+      }
+
+      TestNGTestResultBuildAction action = build.getAction(getBuildActionClass());
+      //Err, I think this is the only way?
+      for (TestNGTestResult result : action.getResult().getTestList()) {
+         for(ClassResult classResult : result.getClassList()) {
+            for(MethodResult methodResult : classResult.getTestMethods()) {
+               JSONObject method = new JSONObject();
+               method.put("starting_time", methodResult.getStartTime());
+               method.put("ending_time", methodResult.getEndTime());
+               method.put("status", methodResult.getStatus());
+               method.put("name", methodResult.getName());
+               jsonObject.add(method);
+            }
+         }
+      }
+      return jsonObject.toString();
+   }
 }

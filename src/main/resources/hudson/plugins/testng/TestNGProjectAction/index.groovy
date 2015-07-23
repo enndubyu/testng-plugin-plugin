@@ -55,6 +55,7 @@ l.layout(title: "TestNG Results Trend") {
 script() {
     text("\nvar data = ${my.getChartJson()};")
     text("\nvar vizData = ${my.getVizJson()};")
+    text("\nvar unsortedData = ${my.getUnsortedJson()};")
     text("\nresultsGraph('chart', data);")
     text("\ntestViz('viz', vizData);")
 }
