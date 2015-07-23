@@ -11,6 +11,9 @@ l.layout(title: "TestNG Report for Build #${my.owner.number}") {
 
         h1("${my.displayName}")
         st.include(page: "bar.groovy")
+        a(href: "viz") {
+            text("Execution Timeline")
+        }
         st.include(page: "reportDetail.groovy")
     }
 }
