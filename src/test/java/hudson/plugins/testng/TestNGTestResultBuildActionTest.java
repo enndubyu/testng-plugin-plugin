@@ -73,7 +73,9 @@ public class TestNGTestResultBuildActionTest {
         TestNGResult testngResult = (TestNGResult) build.getAction(AbstractTestResultAction.class).getResult();
 
         //Get page
-        HtmlPage page = r.createWebClient().goTo(build.getUrl() + PluginImpl.URL);
+        JenkinsRule.WebClient wc = r.createWebClient();
+        wc.getOptions().setThrowExceptionOnScriptError(false);
+        HtmlPage page = wc.goTo(build.getUrl() + PluginImpl.URL);
 
         //make sure no cell is empty
         List<HtmlElement> elements = DomNodeUtil.selectNodes(page, "//table[substring(@id, string-length(@id)- string-length('-tbl') +1)]/*/tr/td");
@@ -84,7 +86,8 @@ public class TestNGTestResultBuildActionTest {
         //ensure only one failed test
         //there are three links in the cell, we pick the one without any id attr
         elements = DomNodeUtil.selectNodes(page, "//table[@id='fail-tbl']/tbody/tr/td/a[not(@id)]");
-        assertEquals(1, elements.size());
+        assertEquals(2, elements.size());
+
         MethodResult mr = testngResult.getFailedTests().get(0);
         assertEquals(r.getURL() + mr.getRun().getUrl() + mr.getId(),
                 elements.get(0).getAttribute("href"));
@@ -132,10 +135,11 @@ public class TestNGTestResultBuildActionTest {
         }
         Collections.sort(linksFromResult);
         assertEquals(linksFromResult, linksInPage);
-
-        //verify bar
+        
+        //verify pie
         HtmlElement element = page.getElementById("fail-skip", true);
         r.assertStringContains(element.getTextContent(), "1 failure");
+
         assertFalse(element.getTextContent().contains("failures"));
         r.assertStringContains(element.getTextContent(), "1 skipped");
         element = page.getElementById("pass", true);
@@ -170,7 +174,9 @@ public class TestNGTestResultBuildActionTest {
         TestNGResult testngResult = (TestNGResult) build.getAction(AbstractTestResultAction.class).getResult();
 
         //Get page
-        HtmlPage page = r.createWebClient().goTo(build.getUrl() + PluginImpl.URL);
+        JenkinsRule.WebClient wc = r.createWebClient();
+        wc.getOptions().setThrowExceptionOnScriptError(false);
+        HtmlPage page = wc.goTo(build.getUrl() + PluginImpl.URL);
 
         //make sure no cell is empty
         List<HtmlElement> elements = DomNodeUtil.selectNodes(page, "//table[substring(@id, string-length(@id)- string-length('-tbl') +1)]/*/tr/td");
@@ -214,10 +220,11 @@ public class TestNGTestResultBuildActionTest {
         Collections.sort(linksFromResult);
         assertEquals(linksFromResult, linksInPage);
         assertTrue(linksInPage.contains("No Package"));
-
-        //verify bar
+        
+        //verify pie
         HtmlElement element = page.getElementById("fail-skip", true);
         r.assertStringContains(element.getTextContent(), "0 failures");
+
         assertFalse(element.getTextContent().contains("skipped"));
         element = page.getElementById("pass", true);
         r.assertStringContains(element.getTextContent(), "526 tests");

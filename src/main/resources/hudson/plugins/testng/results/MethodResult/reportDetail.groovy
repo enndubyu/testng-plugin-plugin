@@ -9,6 +9,13 @@ l = namespace(lib.LayoutTagLib)
 t = namespace("/lib/hudson")
 st = namespace("jelly:stapler")
 
+link(rel: "stylesheet", href:"${app.rootUrl}/plugin/testng-plugin/css/c3.min.css")
+link(rel: "stylesheet", href:"${app.rootUrl}/plugin/testng-plugin/css/style.css")
+
+script(src:"${app.rootUrl}/plugin/testng-plugin/js/d3.min.js")
+script(src:"${app.rootUrl}/plugin/testng-plugin/js/c3.min.js")
+script(src:"${app.rootUrl}/plugin/testng-plugin/js/draw_methodResult.js")
+
 def testngProjAction = my.run.project.getAction(TestNGProjectAction.class)
 
 div(id: "report") {
@@ -21,6 +28,13 @@ div(id: "report") {
 
     span(class: "${my.cssClass}", id: "status") {
         h1("${my.status}")
+    }
+
+    def failString = "FAIL"
+
+    raw("<br/><br/>")
+    if (my.status == failString) {
+        text("Consecutive Failures: ${my.failureAge}")
     }
 
     div(id: "description") {
@@ -71,7 +85,8 @@ div(id: "report") {
 
     br()
     br()
-    img(id: "trend", src: "graph", lazymap: "graphMap", alt: "[Method Execution Trend Chart]")
+    //img(id: "trend", src: "graph", lazymap: "graphMap", alt: "[Method Execution Trend Chart]")
+    div(id: "chart")
 
     if (my.reporterOutput) {
         div(id: "reporter-output") {
@@ -102,4 +117,9 @@ div(id: "report") {
             }
         }
     }
+}
+
+script() {
+    text("var data = ${my.getChartJson()};")
+    text("\nresultsGraph('chart', data);")
 }

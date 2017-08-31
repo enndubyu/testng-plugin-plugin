@@ -1,18 +1,15 @@
 package hudson.plugins.testng.results;
 
-import java.io.IOException;
 import java.util.*;
 
 import hudson.model.Run;
 import hudson.plugins.testng.TestNGTestResultBuildAction;
-import hudson.plugins.testng.util.GraphHelper;
 import hudson.tasks.test.TestResult;
 import hudson.util.ChartUtil;
 import hudson.util.DataSetBuilder;
-import hudson.util.Graph;
-import org.jfree.chart.JFreeChart;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import jenkins.model.lazy.LazyBuildMixIn;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -241,109 +238,65 @@ public class MethodResult extends BaseResult {
     }
 
     /**
-     * Creates test method execution history graph
+     * Returns json for charting
      *
-     * @param req request
-     * @param rsp response
-     * @throws IOException
+     * @return a json for a chart
      */
-    public void doGraph(final StaplerRequest req, StaplerResponse rsp) throws IOException {
-        Graph g = getGraph(req, rsp);
-        if (g != null) {
-            g.doPng(req, rsp);
-        }
-    }
+    public String getChartJson() {
+        JSONObject jsonObject = new JSONObject();
+        JSONArray status = new JSONArray();
+        JSONArray time = new JSONArray();
+        JSONArray buildNum = new JSONArray();
+    
+        SortedMap<Integer, MethodResult> loadedBuilds = new TreeMap<Integer, MethodResult>();
+        Run<?, ?> selectedBuild = getRun();
 
-    /**
-     * Creates map to make the graph click-able
-     *
-     * @param req request
-     * @param rsp response
-     * @throws IOException
-     */
-    public void doGraphMap(final StaplerRequest req, StaplerResponse rsp) throws IOException {
-        Graph g = getGraph(req, rsp);
-        if (g != null) {
-            g.doMap(req, rsp);
-        }
-    }
-
-    /**
-     * Returns graph instance if needed
-     *
-     * @param req request
-     * @param rsp response
-     * @return a graph
-     */
-    private hudson.util.Graph getGraph(final StaplerRequest req, StaplerResponse rsp) {
-        Calendar t = getRun().getParent().getLastCompletedBuild().getTimestamp();
-        if (req.checkIfModified(t, rsp)) {
-            return null;
-        }
-
-        final DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dataSetBuilder =
-                new DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel>();
-        final Map<ChartUtil.NumberOnlyBuildLabel, String> statusMap =
-                new HashMap<ChartUtil.NumberOnlyBuildLabel, String>();
-
-        populateDataSetBuilder(dataSetBuilder, statusMap);
-        return new Graph(-1, 800, 150) {
-            protected JFreeChart createGraph() {
-                return GraphHelper.createMethodChart(req, dataSetBuilder.build(), statusMap,
-                        // getUrl instead of getUpUrl as latter gets the complete url and we only need
-                        // relative url path from a specific build
-                        getUrl());
-            }
-        };
-    }
-
-    /**
-     * Populates the data set build with results from any successive and at max 9
-     * previous builds.
-     *
-     * @param dataSetBuilder the data set
-     * @param statusMap      key as build and value as the execution status (result) of
-     *                       test method execution
-     */
-    private void populateDataSetBuilder(
-            DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dataSetBuilder,
-            Map<ChartUtil.NumberOnlyBuildLabel, String> statusMap) {
+        //Get up to 10 builds in each direction
+        MethodResult methodResult = null;
         int count = 0;
-        for (Run<?, ?> build = getRun(); build != null; build = build.getNextBuild()) {
-            addData(dataSetBuilder, statusMap, build);
-        }
         for (Run<?, ?> build = getRun();
+             build != null && count++ < 10;
+             build = build.getNextBuild()) {
+            methodResult = getMethodResultFromBuild(build);
+            if(methodResult != null) {
+                loadedBuilds.put(build.getNumber(), methodResult);
+            }
+        }
+        count = 0;
+        for (Run<?, ?> build = selectedBuild.getPreviousBuild();
              build != null && count++ < 10;
              //getting running builds as well (will deal accordingly)
              build = build.getPreviousBuild()) {
-            addData(dataSetBuilder, statusMap, build);
+            methodResult = getMethodResultFromBuild(build);
+            if(methodResult != null) {
+                loadedBuilds.put(build.getNumber(), methodResult);
+            }
         }
+        
+        //Combine builds in ordered list
+        List<Map.Entry<Integer, MethodResult>> buildList = new ArrayList<Map.Entry<Integer, MethodResult>>(loadedBuilds.entrySet());
+        Collections.reverse(buildList);
+        for(Map.Entry<Integer, MethodResult> methRes : buildList) {
+            status.add(methRes.getValue().getStatus());
+            time.add(methRes.getValue().getDuration());
+            buildNum.add(methRes.getKey());
+        }
+        
+
+        jsonObject.put("status", status);
+        jsonObject.put("duration", time);
+        jsonObject.put("buildNum", buildNum);
+        return jsonObject.toString();
     }
 
-    private void addData(DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dataSetBuilder,
-                         Map<ChartUtil.NumberOnlyBuildLabel, String> statusMap,
-                         Run<?, ?> build) {
-        ChartUtil.NumberOnlyBuildLabel label = new ChartUtil.NumberOnlyBuildLabel(build);
+    private MethodResult getMethodResultFromBuild(Run<?, ?> build) {
         TestNGTestResultBuildAction action = build.getAction(TestNGTestResultBuildAction.class);
         TestNGResult results;
         MethodResult methodResult = null;
         if (action != null && (results = action.getResult()) != null) {
             methodResult = getMethodResult(results);
         }
-
-        if (methodResult == null) {
-            dataSetBuilder.add(0, "resultRow", label);
-            //deal with builds still running
-            if (build.isBuilding()) {
-                statusMap.put(label, "BUILD IN PROGRESS");
-            } else {
-                statusMap.put(label, "UNKNOWN");
-            }
-        } else {
-            //status is PASS, FAIL or SKIP
-            dataSetBuilder.add(methodResult.getDuration(), "resultRow", label);
-            statusMap.put(label, methodResult.getStatus());
-        }
+        return methodResult;
     }
 
     /**
@@ -393,18 +346,18 @@ public class MethodResult extends BaseResult {
     public Object getCssClass() {
         if (this.status != null) {
             if (this.status.equalsIgnoreCase("pass")) {
-                return "result-passed";
+                return "mr-result-passed";
             } else {
                 if (this.status.equalsIgnoreCase("skip")) {
-                    return "result-skipped";
+                    return "mr-result-skipped";
                 } else {
                     if (this.status.equalsIgnoreCase("fail")) {
-                        return "result-failed";
+                        return "mr-result-failed";
                     }
                 }
             }
         }
-        return "result-passed";
+        return "mr-result-passed";
     }
 
     /**
@@ -430,4 +383,26 @@ public class MethodResult extends BaseResult {
     public boolean hasChildren() {
         return false;
     }
+    
+    /**
+     * Gets the age of a result
+     *
+     * @return the number of consecutive builds for which we have failed result for
+     *         this package
+     */
+    public long getFailureAge() {
+    	long failAge;
+    	if (!this.status.equalsIgnoreCase("fail")) {
+    		failAge = 0;
+    	} else {
+    		MethodResult result = (MethodResult) getPreviousResult();
+            if (result == null) {
+                failAge = 1;
+            } else {
+                failAge =  1 + result.getFailureAge();
+            }
+    	}
+    	return failAge;
+    }
+    
 }
