@@ -3,20 +3,19 @@ package hudson.plugins.testng;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
-import java.util.Map;
-import java.util.TreeMap;
 
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import java.util.Map;
+import java.util.TreeMap;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
+import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -101,23 +100,7 @@ public class PublisherTest {
         String str = os.toString();
         Assert.assertTrue(str.contains("Build Aborted"));
     }
-    
-    @Test
-    public void testNoResultsOff() throws Exception {
-        FreeStyleProject p = r.createFreeStyleProject();
-        Publisher before = new Publisher();
-        before.setReportFilenamePattern("some.xml");
-        before.setFailureOnNoResults(false);
-        p.getPublishersList().add(before);
-        
-        //run build
-        FreeStyleBuild build = p.scheduleBuild2(0).get();
-        
-        //assert result is not FAILURE
-        Assert.assertTrue(build.getLog(50).toString().contains("Did not find any matching files"));
-        Assert.assertFalse(build.getResult().equals(Result.FAILURE));
-    }
-    
+
     @Test
     public void testRoundTrip() throws Exception {
         FreeStyleProject p = r.createFreeStyleProject();
@@ -133,11 +116,11 @@ public class PublisherTest {
         before.setFailedFails(0);
         before.setThresholdMode(1);
         p.getPublishersList().add(before);
-        
+
         r.submit(r.createWebClient().getPage(p,"configure").getFormByName("config"));
-        
+
         Publisher after = p.getPublishersList().get(Publisher.class);
-        
+
         r.assertEqualBeans(before, after, "reportFilenamePattern,escapeTestDescp,escapeExceptionMsg,showFailedBuilds");
     }
 

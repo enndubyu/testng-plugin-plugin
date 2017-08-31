@@ -80,9 +80,7 @@ public class ClassResultTest {
 
         //Get page
         String urlPrefix = build.getUrl() + PluginImpl.URL;
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(urlPrefix + "/precheckins/LegacyOps/");
+        HtmlPage page = r.createWebClient().goTo(urlPrefix + "/precheckins/LegacyOps/");
 
         List<HtmlElement> elements = DomNodeUtil.selectNodes(page, "//div[starts-with(@id, 'run-')]/span[@id='run-info']");
 
@@ -186,9 +184,7 @@ public class ClassResultTest {
 
         //Get page
         String urlPrefix = build.getUrl() + PluginImpl.URL;
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(urlPrefix + "/test/CommandLineTest");
+        HtmlPage page = r.createWebClient().goTo(urlPrefix + "/test/CommandLineTest");
 
         List<HtmlElement> elements = DomNodeUtil.selectNodes(page, "//div[starts-with(@id, 'run-')]/table[@id='config']");
         // there are no configuration methods

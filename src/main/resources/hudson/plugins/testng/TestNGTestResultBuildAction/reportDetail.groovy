@@ -22,10 +22,7 @@ if (my.result.failCount != 0) {
                 th(class: "pane-header") {
                     text("Test Method")
                 }
-                th(class: "pane-header", style:"width:5em") {
-                    text("Age")
-                }
-                th(class: "pane-header", style:"width:5em") {
+                th(class: "pane-header") {
                     text("Duration")
                 }
             }
@@ -35,10 +32,10 @@ if (my.result.failCount != 0) {
                 tr() {
                     td(align: "left") {
                         a(id: "${failedTest.id}-showlink", href:"javascript:showStackTrace('${failedTest.id}', '${failedTest.upUrl}/summary')") {
-                            text("▼")
+                            text(">>>")
                         }
                         a(style: "display:none", id: "${failedTest.id}-hidelink", href:"javascript:hideStackTrace('${failedTest.id}')") {
-                            text("▲")
+                            text("<<<")
                         }
                         text(" ")
                         a(href:"${failedTest.upUrl}") {
@@ -48,12 +45,7 @@ if (my.result.failCount != 0) {
                             text("Loading...")
                         }
                     }
-                    td(align: "center") {
-                        a(href:"${failedTest.upUrl}") {
-                            text("${failedTest.failureAge}")
-                        }
-                    }
-                    td(align: "center") {
+                    td(align: "right") {
                         text("${FormatUtil.formatTime(failedTest.duration)}")
                     }
                 }
@@ -180,10 +172,10 @@ def printMethods(type, tableName, methodList, showMoreArrows) {
                     td(align: "left") {
                         if (showMoreArrows) {
                             a(id: "${method.id}-showlink", href:"javascript:showStackTrace('${method.id}', '${method.upUrl}/summary')") {
-                                text("▼")
+                                text(">>>")
                             }
                             a(style: "display:none", id: "${method.id}-hidelink", href:"javascript:hideStackTrace('${method.id}')") {
-                                text("▲")
+                                text("<<<")
                             }
                             text(" ")
                         }

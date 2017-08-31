@@ -1,20 +1,24 @@
 package hudson.plugins.testng;
 
-import hudson.model.*;
-import hudson.tasks.test.TestResultProjectAction;
-
-import jenkins.model.lazy.LazyBuildMixIn;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
 import hudson.Functions;
 import hudson.model.AbstractBuild;
+import java.io.IOException;
+import java.util.Calendar;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-
+import hudson.model.Job;
+import hudson.model.ProminentProjectAction;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.plugins.testng.util.GraphHelper;
+import hudson.tasks.test.TestResultProjectAction;
+import hudson.util.ChartUtil;
+import hudson.util.DataSetBuilder;
+import java.util.Set;
+import jenkins.model.lazy.LazyBuildMixIn;
+import org.jfree.chart.JFreeChart;
 import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * Action to associate the TestNG reports with the project
@@ -23,82 +27,137 @@ import org.kohsuke.stapler.Stapler;
  */
 public class TestNGProjectAction extends TestResultProjectAction implements ProminentProjectAction {
 
-    private transient boolean escapeTestDescp;
-    private transient boolean escapeExceptionMsg;
-    private transient boolean showFailedBuilds;
+   private transient boolean escapeTestDescp;
+   private transient boolean escapeExceptionMsg;
+   private transient boolean showFailedBuilds;
 
-    public TestNGProjectAction(Job<?, ?> project,
-          boolean escapeTestDescp, boolean escapeExceptionMsg, boolean showFailedBuilds) {
-       super(project);
-       this.escapeExceptionMsg = escapeExceptionMsg;
-       this.escapeTestDescp = escapeTestDescp;
-       this.showFailedBuilds = showFailedBuilds;
-    }
+   public TestNGProjectAction(Job<?, ?> project,
+         boolean escapeTestDescp, boolean escapeExceptionMsg, boolean showFailedBuilds) {
+      super(project);
+      this.escapeExceptionMsg = escapeExceptionMsg;
+      this.escapeTestDescp = escapeTestDescp;
+      this.showFailedBuilds = showFailedBuilds;
+   }
 
-    protected Class<TestNGTestResultBuildAction> getBuildActionClass() {
-       return TestNGTestResultBuildAction.class;
-    }
+   protected Class<TestNGTestResultBuildAction> getBuildActionClass() {
+      return TestNGTestResultBuildAction.class;
+   }
 
-    public boolean getEscapeTestDescp()
-    {
-       return escapeTestDescp;
-    }
+   public boolean getEscapeTestDescp()
+   {
+      return escapeTestDescp;
+   }
 
-    public boolean getEscapeExceptionMsg()
-    {
-       return escapeExceptionMsg;
-    }
+   public boolean getEscapeExceptionMsg()
+   {
+      return escapeExceptionMsg;
+   }
 
-    /**
-     * Getter for property 'project'.
-     *
-     * @return Value for property 'project'.
-     */
-    public Job<?, ?> getProject() {
-       return super.job;
-    }
+   /**
+    * Getter for property 'project'.
+    *
+    * @return Value for property 'project'.
+    */
+   public Job<?, ?> getProject() {
+      return super.job;
+   }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getIconFileName() {
-       return PluginImpl.ICON_FILE_NAME;
-    }
+   /**
+    * {@inheritDoc}
+    */
+   public String getIconFileName() {
+      return PluginImpl.ICON_FILE_NAME;
+   }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getDisplayName() {
-       return PluginImpl.DISPLAY_NAME;
-    }
+   /**
+    * {@inheritDoc}
+    */
+   public String getDisplayName() {
+      return PluginImpl.DISPLAY_NAME;
+   }
 
-    /**
-     * Getter for property 'graphName'.
-     *
-     * @return Value for property 'graphName'.
-     */
-    public String getGraphName() {
-       return PluginImpl.GRAPH_NAME;
-    }
+   /**
+    * Getter for property 'graphName'.
+    *
+    * @return Value for property 'graphName'.
+    */
+   public String getGraphName() {
+      return PluginImpl.GRAPH_NAME;
+   }
 
-    /**
-     * {@inheritDoc}
-     */
-    public String getUrlName() {
-       return PluginImpl.URL;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public String getSearchUrl() {
+   /**
+    * {@inheritDoc}
+    */
+   public String getUrlName() {
       return PluginImpl.URL;
+   }
+
+   /**
+    * {@inheritDoc}
+    */
+   public String getSearchUrl() {
+      return PluginImpl.URL;
+   }
+
+   /**
+    * Generates the graph that shows test pass/fail ratio
+    * @param req -
+    * @param rsp -
+    * @throws IOException -
+    */
+   public void doGraph(final StaplerRequest req,
+                      StaplerResponse rsp) throws IOException {
+      if (newGraphNotNeeded(req, rsp)) {
+        return;
+      }
+
+      final DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dataSetBuilder =
+            new DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel>();
+
+      populateDataSetBuilder(dataSetBuilder);
+      new hudson.util.Graph(-1, getGraphWidth(), getGraphHeight()) {
+         protected JFreeChart createGraph() {
+            return GraphHelper.createChart(req, dataSetBuilder.build());
+         }
+      }.doPng(req,rsp);
    }
 
     /** Generalizes {@link AbstractBuild#getUpUrl} to {@link Run}. */
     public String getUpUrl() {
         return Functions.getNearestAncestorUrl(Stapler.getCurrentRequest(), job) + '/';
     }
+
+    /**
+    * If the last build is the same,
+    * no need to regenerate the graph. Browser should reuse it's cached image
+    *
+    * @param req request
+    * @param rsp response
+    * @return true, if new image does NOT need to be generated, false otherwise
+    */
+   private boolean newGraphNotNeeded(final StaplerRequest req,
+         StaplerResponse rsp) {
+      Calendar t = getProject().getLastCompletedBuild().getTimestamp();
+      return req.checkIfModified(t, rsp);
+   }
+
+   public void doGraphMap(final StaplerRequest req,
+           StaplerResponse rsp) throws IOException {
+      if (newGraphNotNeeded(req, rsp)) {
+         return;
+      }
+
+      final DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dataSetBuilder =
+      new DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel>();
+
+      //TODO: optimize by using cache
+      populateDataSetBuilder(dataSetBuilder);
+      new hudson.util.Graph(-1, getGraphWidth(), getGraphHeight()) {
+         protected JFreeChart createGraph() {
+           return GraphHelper.createChart(req, dataSetBuilder.build());
+         }
+      }.doMap(req, rsp);
+   }
 
    /**
     * Returns <code>true</code> if there is a graph to plot.
@@ -123,7 +182,7 @@ public class TestNGProjectAction extends TestResultProjectAction implements Prom
 
    public TestNGTestResultBuildAction getLastCompletedBuildAction() {
       for (Run<?, ?> build = getProject().getLastCompletedBuild();
-           build != null; build = build.getPreviousCompletedBuild()) {
+               build != null; build = build.getPreviousCompletedBuild()) {
          final TestNGTestResultBuildAction action = build.getAction(getBuildActionClass());
          if (action != null) {
             return action;
@@ -132,52 +191,50 @@ public class TestNGProjectAction extends TestResultProjectAction implements Prom
       return null;
    }
 
-   public JSONObject getChartData() {
-      JSONObject jsonObject = new JSONObject();
-      JSONArray passes = new JSONArray();
-      JSONArray fails = new JSONArray();
-      JSONArray skips = new JSONArray();
-      JSONArray buildNum = new JSONArray();
-      JSONArray durations = new JSONArray();
-      JSONArray buildStatus = new JSONArray();
-
-      int count = 0;
-
-      SortedMap<Integer, Run<?, ?>> loadedBuilds = (SortedMap<Integer, Run<?, ?>>) ((LazyBuildMixIn.LazyLoadingJob<?,?>) job).getLazyBuildMixIn()._getRuns().getLoadedBuilds();
-      List<Run<?, ?>> buildList = new ArrayList(loadedBuilds.values());
-      Run<?, ?> build;
-      for (int i = 0; i < buildList.size() && count++ < 25; i++) {
-         build = buildList.get(i);
-         if (build == null) {
-             //Non-existent build! Skip.
-             continue;
-         }
+   protected void populateDataSetBuilder(DataSetBuilder<String, ChartUtil.NumberOnlyBuildLabel> dataset) {
+      if (!(job instanceof LazyBuildMixIn.LazyLoadingJob)) {
+         return;
+      }
+      Set<Integer> loadedBuilds = ((LazyBuildMixIn.LazyLoadingJob<?,?>) job).getLazyBuildMixIn()._getRuns().getLoadedBuilds().keySet(); // cf. AbstractTestResultAction.getPreviousResult(Class, false)
+      for (Run<?, ?> build = getProject().getLastBuild();
+         build != null; build = loadedBuilds.contains(build.number - 1) ? build.getPreviousCompletedBuild() : null) {
+         ChartUtil.NumberOnlyBuildLabel label = new ChartUtil.NumberOnlyBuildLabel(build);
          TestNGTestResultBuildAction action = build.getAction(getBuildActionClass());
 
-         if (build.getResult() == null || build.getResult().isWorseThan(Result.FAILURE)) {
+         Result result = build.getResult();
+         if (result == null || result.isWorseThan(Result.FAILURE)) {
             //We don't want to add aborted or builds with no results into the graph
             continue;
          }
 
+         if (!showFailedBuilds && result.equals(Result.FAILURE)) {
+            //failed build and configuration states that we should skip this build
+            continue;
+         }
+
          if (action != null) {
-            passes.add(action.getTotalCount() - action.getFailCount() - action.getSkipCount());
-            fails.add(action.getFailCount());
-            skips.add(action.getSkipCount());
-            buildNum.add(Integer.toString(build.getNumber()));
-            durations.add(build.getDuration());
-            buildStatus.add(build.getResult().color);
+            dataset.add(action.getTotalCount() - action.getFailCount() - action.getSkipCount(), "Passed", label);
+            dataset.add(action.getFailCount(), "Failed", label);
+            dataset.add(action.getSkipCount(), "Skipped", label);
          }
       }
-      jsonObject.put("pass", passes);
-      jsonObject.put("fail", fails);
-      jsonObject.put("skip", skips);
-      jsonObject.put("buildNum", buildNum);
-      jsonObject.put("duration", durations);
-      jsonObject.put("buildStatus", buildStatus);
-      return jsonObject;
    }
-   
-   public String getChartJson() {
-       return getChartData().toString();
+
+   /**
+    * Getter for property 'graphWidth'.
+    *
+    * @return Value for property 'graphWidth'.
+    */
+   public int getGraphWidth() {
+      return 500;
+   }
+
+   /**
+    * Getter for property 'graphHeight'.
+    *
+    * @return Value for property 'graphHeight'.
+    */
+   public int getGraphHeight() {
+      return 200;
    }
 }

@@ -73,10 +73,7 @@ public class PackageResultTest {
 
         //Get page
         String urlPrefix = build.getUrl() + PluginImpl.URL;
-
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(urlPrefix + "/precheckins");
+        HtmlPage page = r.createWebClient().goTo(urlPrefix + "/precheckins");
 
         List<HtmlElement> elements = DomNodeUtil.selectNodes(page, "//table[@id='allClasses']/tbody/tr/td/a");
 
@@ -140,11 +137,10 @@ public class PackageResultTest {
 
         //assert that link to get all methods is no longer visible
         r.assertStringContains(divShowAllLink.getAttribute("style"), "none");
-        
-        //verify pie
+
+        //verify bar
         HtmlElement element = page.getElementById("fail-skip", true);
         r.assertStringContains(element.getTextContent(), "1 failure");
-
         assertFalse(element.getTextContent().contains("failures"));
         r.assertStringContains(element.getTextContent(), "1 skipped");
         element = page.getElementById("pass", true);
@@ -182,17 +178,14 @@ public class PackageResultTest {
 
         //Get page
         String urlPrefix = build.getUrl() + PluginImpl.URL;
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(urlPrefix + "/my.package");
+        HtmlPage page = r.createWebClient().goTo(urlPrefix + "/my.package");
 
         //verify only first 25 methods are shown
         assertNull(page.getElementById("showAllLink"));
 
-        //verify pie
+        //verify bar
         HtmlElement element = page.getElementById("fail-skip", true);
         r.assertStringContains(element.getTextContent(), "0 failures");
-
         assertFalse(element.getTextContent().contains("skipped"));
         element = page.getElementById("pass", true);
         r.assertStringContains(element.getTextContent(), "1 test");

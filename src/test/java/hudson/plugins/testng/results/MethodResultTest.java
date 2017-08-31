@@ -59,12 +59,8 @@ public class MethodResultTest {
 
         //Compare output
         String methodUrl = build.getUrl() + PluginImpl.URL + "/gov.nasa.jpl/FoobarTests/b";
-    
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(methodUrl);
+        HtmlPage page = r.createWebClient().goTo(methodUrl);
         HtmlElement expMsg = page.getElementById("exp-msg", true);
-
         String contents = expMsg.getTextContent();
         r.assertStringContains(contents, "</a>"); //escaped HTML so it shows up as string
     }
@@ -94,12 +90,8 @@ public class MethodResultTest {
 
         //Compare output
         String methodUrl = build.getUrl() + PluginImpl.URL + "/gov.nasa.jpl/FoobarTests/b";
-    
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(methodUrl);
+        HtmlPage page = r.createWebClient().goTo(methodUrl);
         HtmlElement expMsg = page.getElementById("exp-msg", true);
-
         String contents = expMsg.getTextContent();
         assertFalse(contents.contains("</a>")); //non-escaped HTML so it shouldn't show up as text
     }
@@ -129,12 +121,8 @@ public class MethodResultTest {
 
         //Compare output
         String methodUrl = build.getUrl() + PluginImpl.URL + "/com.test/UploadTest/uploadFile";
-    
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(methodUrl);
+        HtmlPage page = r.createWebClient().goTo(methodUrl);
         HtmlElement description = page.getElementById("description", true);
-
         String contents = description.getTextContent();
         assertFalse(contents.contains("</a>")); //non-escaped HTML so it doesn't show up as text
         assertFalse(contents.contains("<a href=\"")); //non-escaped HTML
@@ -165,12 +153,8 @@ public class MethodResultTest {
 
         //Compare output
         String methodUrl = build.getUrl() + PluginImpl.URL + "/com.test/UploadTest/uploadFile";
-    
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(methodUrl);
+        HtmlPage page = r.createWebClient().goTo(methodUrl);
         HtmlElement description = page.getElementById("description", true);
-
         String contents = description.getTextContent();
         r.assertStringContains(contents, "</a>"); //escaped HTML so it shows up as text
     }
@@ -209,12 +193,8 @@ public class MethodResultTest {
 
         //Compare output
         String methodUrl = build.getUrl() + PluginImpl.URL + "/com.fakepkg.test/FoobarTests/test";
-    
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(methodUrl);
+        HtmlPage page = r.createWebClient().goTo(methodUrl);
         HtmlElement description = page.getElementById("description", true);
-
         assertEquals(2, description.getElementsByTagName("br").size());
 
         HtmlElement exp = page.getElementById("exp-msg", true);
@@ -246,12 +226,8 @@ public class MethodResultTest {
         //Compare output
         String methodUrl = build.getUrl() + PluginImpl.URL
                 + "/org.example.test/ExampleIntegrationTest/FirstTest";
-    
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(methodUrl);
+        HtmlPage page = r.createWebClient().goTo(methodUrl);
         HtmlElement reporterOutput = page.getElementById("reporter-output", true);
-
         String contents = reporterOutput.getTextContent();
         r.assertStringContains(contents, "Some Reporter.log() statement");
         r.assertStringContains(contents, "Another Reporter.log() statement");
@@ -288,12 +264,8 @@ public class MethodResultTest {
 
         //Compare output for a method
         String urlPrefix = build.getUrl() + PluginImpl.URL;
-    
-        JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-        HtmlPage page = wc.goTo(urlPrefix + "/test/Test1/includedGroups_1/");
+        HtmlPage page = r.createWebClient().goTo(urlPrefix + "/test/Test1/includedGroups_1/");
         HtmlElement element = page.getElementById("parent", true);
-
         String contents = element.getTextContent();
         //information about class and time taken
         r.assertStringContains(contents, "test.Test1");
@@ -307,14 +279,21 @@ public class MethodResultTest {
         assertEquals("includedGroups", element.getTextContent());
 
         //method status information
-        element = page.getElementById("status", true);
-        assertTrue(element.getAttribute("class").contains("result-passed"));
-
+        element = (HtmlElement) page.getElementById("status");
+        assertEquals("result-passed", element.getAttribute("class"));
         assertEquals("PASS", element.getTextContent());
 
         //this method has single group
         element = (HtmlElement) page.getElementById("groups");
         assertEquals(element.getTextContent(), "Group(s): current");
+
+        //should have an img
+        element = page.getElementById("report").getElementsByTagName("img").get(0);
+        assertNotNull(element);
+        assertEquals("trend", element.getAttribute("id"));
+        assertEquals("graph", element.getAttribute("src"));
+        assertEquals("graphMap", element.getAttribute("lazymap"));
+        assertEquals("[Method Execution Trend Chart]", element.getAttribute("alt"));
 
         //following shouldn't be present on page
         assertNull(page.getElementById("inst-name"));
@@ -323,10 +302,9 @@ public class MethodResultTest {
         assertNull(page.getElementById("exp-msg"));
 
         //method run using two parameters
-        page = wc.goTo(urlPrefix
+        page = r.createWebClient().goTo(urlPrefix
                 + "/test.dataprovider/Sample1Test/verifyNames_1/");
         element = (HtmlElement) page.getElementById("params");
-
         contents = element.getTextContent();
         //information about class and time taken
         r.assertStringContains(contents, "Parameter #1");
@@ -362,15 +340,12 @@ public class MethodResultTest {
 
         //Compare output for a dp method that failed
         String urlPrefix = build.getUrl() + PluginImpl.URL;
-
         JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
         HtmlPage page = wc.goTo(urlPrefix + "/org.jenkins/TestDataProvider/test/");
 
         //method status information
         HtmlElement element = page.getElementById("status", true);
-        assertTrue(element.getAttribute("class").contains("result-failed"));
-
+        assertEquals("result-failed", element.getAttribute("class"));
         assertEquals("FAIL", element.getTextContent());
 
         //this method has single parameter
@@ -397,10 +372,8 @@ public class MethodResultTest {
         page = wc.goTo(urlPrefix + "/org.jenkins/TestDataProvider/test_2/");
 
         //method status information
-
         element = page.getElementById("status", true);
-        assertTrue(element.getAttribute("class").contains("result-passed"));
-
+        assertEquals("result-passed", element.getAttribute("class"));
         assertEquals("PASS", element.getTextContent());
 
         //this method has single parameter
@@ -445,10 +418,7 @@ public class MethodResultTest {
 
         //Compare output for a dp method that failed
         String urlPrefix = build.getUrl() + PluginImpl.URL;
-
         JenkinsRule.WebClient wc = r.createWebClient();
-        wc.getOptions().setThrowExceptionOnScriptError(false);
-
         HtmlPage page = wc.goTo(urlPrefix + "/testng.instancename/MyITestFactoryTest/factoryTest1/");
 
         //method instance name information

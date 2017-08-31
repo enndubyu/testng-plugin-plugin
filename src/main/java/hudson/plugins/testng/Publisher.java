@@ -39,8 +39,6 @@ public class Publisher extends Recorder implements SimpleBuildStep {
    private boolean escapeExceptionMsg = true;
    //failed config mark build as failure
    private boolean failureOnFailedTestConfig = false;
-   //if there are no results, mark build as failure
-   private boolean failureOnNoResults = true;
    //should failed builds be included in graphs or not
    private boolean showFailedBuilds = false;
    //v1.11 - marked transient and here just for backward compatibility
@@ -97,15 +95,6 @@ public class Publisher extends Recorder implements SimpleBuildStep {
    @DataBoundSetter
    public void setFailureOnFailedTestConfig(boolean failureOnFailedTestConfig) {
        this.failureOnFailedTestConfig = failureOnFailedTestConfig;
-   }
-
-   public boolean getFailureOnNoResults() {
-      return failureOnNoResults;
-   }
-
-   @DataBoundSetter
-   public void setFailureOnNoResults(boolean failureOnNoResults) {
-      this.failureOnNoResults = failureOnNoResults;
    }
 
    public boolean getShowFailedBuilds() {
@@ -204,9 +193,6 @@ public class Publisher extends Recorder implements SimpleBuildStep {
 
       if (paths.length == 0) {
          logger.println("Did not find any matching files.");
-         if(failureOnNoResults) {
-            build.setResult(Result.FAILURE);
-         }
          //build can still continue
          return;
       }

@@ -16,12 +16,8 @@
          <f:checkbox default="false" />
       </f:entry>
       <f:entry title="Mark build as failure on failed configuration?" field="failureOnFailedTestConfig">
-         <f:checkbox name="testng.failureOnFailedTestConfig" default="false" />
+         <f:checkbox default="false" />
       </f:entry>
-      <f:entry title="Mark build as failure if no results?" field="failureOnNoResults">
-         <f:checkbox name="testng.failureOnNoResults" default="false" />
-      </f:entry>
-
       <f:section title="Thresholds to mark build Unstable">
           <f:entry title="Skipped Tests" field="unstableSkips">
              <f:textbox default="100"/>
@@ -41,12 +37,10 @@
       </f:section>
 
       <f:entry field="thresholdMode" title="${%Choose your threshold mode:}">
-			<f:radio name="thresholdMode"
-				value="1"
-				checked="${instance.thresholdMode==1}"/>
+			<f:radio value="1" checked="${instance.thresholdMode==1}"/>
 			<label class="attach-previous">Number of tests</label>
 			<br/>
-			<f:radio name="thresholdMode" value="2" checked="${instance.thresholdMode==2 or h.defaultToTrue(instance.thresholdMode)}"/>
+			<f:radio value="2" checked="${instance.thresholdMode==2 or h.defaultToTrue(instance.thresholdMode)}"/>
 			<label class="attach-previous">Percentage of tests</label>
 	  </f:entry>
    </f:advanced>
